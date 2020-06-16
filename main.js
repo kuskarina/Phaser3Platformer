@@ -1,6 +1,8 @@
 let isJumping = 1000;
 let platformHeight = 580;
 let jetpackVelocity = -75;
+//const xCord = Math.random() * 600;
+//const yCord = Math.random() * 600;
 
 const gameState = {
      score: 0 
@@ -9,19 +11,20 @@ const gameState = {
 function preload() {
 
     //Loading all the sprites for the game
-    this.load.image('player', 'src/player.png')
+    this.load.image('player', 'src/rocketship.png')
     this.load.image('hill', 'src/hill.png')
     this.load.image('platform', 'src/platform.png')
     this.load.image('background', 'src/background.png')
     this.load.image('coin', 'src/coin.png')
     this.load.audio('music', 'src/music/loopMe.mp3')
     this.load.image('rock', 'src/rock.png')
+    this.load.audio('rocket', 'src/music/rocketsound.wav')
 }
 
 function create() {
     this.add.sprite(400,300, 'background')
     //this.physics.add.sprite(50, 0, 'rock')
-    gameState.scoreText = this.add.text(0, 40, 'Score: 0', { fontSize: '15px', fill: '#ffffff' });
+    //gameState.scoreText = this.add.text(0, 40, 'Score: 0', { fontSize: '15px', fill: '#ffffff' });
     gameState.jumpText = this.add.text(0, 0, 'Jetpack: 1000', { fontSize: '15px', fill: '#ffffff' });
 
     //Player character
@@ -33,22 +36,22 @@ function create() {
     //coin group
     const coins = this.physics.add.staticGroup();
     //left-most platforms
-    platforms.create(40, platformHeight, 'platform')
-    platforms.create(120, platformHeight, 'platform')
-    //mid-right platforms
-    platforms.create(300, platformHeight, 'platform')
-    platforms.create(380, platformHeight, 'platform')
-    //upper platforms
-    platforms.create(210, 500, 'platform')
-    platforms.create(290, 420, 'platform')
-    platforms.create(370, 420, 'platform')
+    for (var i = 0; i < 15; i++) {
+        var x = Phaser.Math.RND.between(0, 800);
+        var y = Phaser.Math.RND.between(200, 600);
+
+        platforms.create(x, y, 'platform')
+        platforms.create(x + 80, y, 'platform')
+    }
     //coins to collect
-    coins.create(390, 370, 'coin')
-    coins.create(30, 500, 'coin')
-    coins.create (380, 470, 'coin')
 
+	for (var i = 0; i < 5; i++) {
+		var x = Phaser.Math.RND.between(0, 800);
+		var y = Phaser.Math.RND.between(0, 600);
 
-    // THERES A BUG WHERE THE HILL ISNT COLLIDING CORRECTLY -- platforms.create(560, 465, 'hill')
+		coins.create(x, y, 'coin');
+	}
+
 
     //playerWorld bounds
     gameState.player.setCollideWorldBounds(true)
@@ -70,7 +73,7 @@ function create() {
     this.physics.add.overlap(gameState.player, coins, function (player, coin) {
         coin.destroy()
         gameState.score += 1;
-        gameState.scoreText.setText(`Score: ${gameState.score}`);
+        //gameState.scoreText.setText(`Score: ${gameState.score}`);
 
     }, null, this)
     
@@ -108,6 +111,20 @@ function update() {
 
     else {
         gameState.player.setVelocityX(0)
+    }
+
+    //win Condition
+
+    if(gameState.score >= 5) {
+        this.physics.pause()
+        this.add.text(400, 300, 'You Win!', { fontSize: '30px', fill: '#ffffff' });
+        this.add.text(250, 200, 'Click to go to the next Level', { fontSize: '30px', fill: '#ffffff' });
+
+        this.input.on('pointerup', () => {
+            gameState.score = 0;
+            this.scene.restart();
+        })
+
     }
 
 
