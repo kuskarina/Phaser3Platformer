@@ -1,5 +1,6 @@
-let isJumping = false;
+let isJumping = 1000;
 let platformHeight = 580;
+let jetpackVelocity = -75;
 
 const gameState = {
      score: 0 
@@ -14,14 +15,19 @@ function preload() {
     this.load.image('background', 'src/background.png')
     this.load.image('coin', 'src/coin.png')
     this.load.audio('music', 'src/music/loopMe.mp3')
+    this.load.image('rock', 'src/rock.png')
 }
 
 function create() {
-
-    gameState.scoreText = this.add.text(0, 40, 'Score: 0', { fontSize: '15px', fill: '#000000' });
+    this.add.sprite(400,300, 'background')
+    //this.physics.add.sprite(50, 0, 'rock')
+    gameState.scoreText = this.add.text(0, 40, 'Score: 0', { fontSize: '15px', fill: '#ffffff' });
+    gameState.jumpText = this.add.text(0, 0, 'Jetpack: 1000', { fontSize: '15px', fill: '#ffffff' });
 
     //Player character
+    
     gameState.player = this.physics.add.sprite(100, 100, 'player');
+    
     //PlatformGroup
     const platforms = this.physics.add.staticGroup();
     //coin group
@@ -36,8 +42,10 @@ function create() {
     platforms.create(210, 500, 'platform')
     platforms.create(290, 420, 'platform')
     platforms.create(370, 420, 'platform')
-
+    //coins to collect
     coins.create(390, 370, 'coin')
+    coins.create(30, 500, 'coin')
+    coins.create (380, 470, 'coin')
 
 
     // THERES A BUG WHERE THE HILL ISNT COLLIDING CORRECTLY -- platforms.create(560, 465, 'hill')
@@ -46,21 +54,34 @@ function create() {
     gameState.player.setCollideWorldBounds(true)
     //collision for platforms
     this.physics.add.collider(gameState.player, platforms, () => {
-        isJumping = false;
+        if (isJumping < 1000){
+            isJumping += 5;
+            gameState.jumpText.setText(`Jetpack: ${isJumping}`);
+        }
+        //gameState.jumpText.setText(`Jetpack: ${isJumping}`);
     })
 
-    //bug where coin isn't being destroyed when touched, also crashes game
-    this.physics.add.overlap(gameState.player, coins, function (coin) {
+    /*TODO: Add hazards
+    this.physics.add.collider(rock, platforms, () => {
+        rock.destroy()
+    })
+    */
+
+    this.physics.add.overlap(gameState.player, coins, function (player, coin) {
         coin.destroy()
         gameState.score += 1;
         gameState.scoreText.setText(`Score: ${gameState.score}`);
 
     }, null, this)
+    
     //Arrow key input variable
     gameState.cursors = this.input.keyboard.createCursorKeys()
 
     //music?
     //this.sound.play('music')
+
+
+    //TODO: ADD A GOAL
 }
 
 function update() {
@@ -69,17 +90,20 @@ function update() {
     if (gameState.cursors.left.isDown){
 
         gameState.player.setVelocityX(-100)
+        gameState.player.flipX = false;
 
     }
     else if (gameState.cursors.right.isDown) {
 
         gameState.player.setVelocityX(100)
+        gameState.player.flipX = true;
 
     }
-    else if (gameState.cursors.up.isDown && isJumping === false)
+    else if (gameState.cursors.up.isDown && isJumping > 0)
     {
-        gameState.player.setVelocityY(-200);
-        isJumping = true;
+        gameState.player.setVelocityY(jetpackVelocity);
+        isJumping -= 5;
+        gameState.jumpText.setText(`Jetpack: ${isJumping}`);
     }
 
     else {
@@ -89,7 +113,7 @@ function update() {
 
 
 }
-
+//TODO: change over to multiple scenes and create a start scene
 const config = {
     width: 800,
     height: 600,
